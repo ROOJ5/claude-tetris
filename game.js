@@ -15,6 +15,16 @@ const COLORS = [
   '#ffb74d', // L - orange
 ];
 
+// En modo claro el amarillo y el naranja pierden contraste contra el fondo
+// claro del tablero; se oscurecen para mantenerse legibles.
+const LIGHT_COLORS = COLORS.map((color, i) => {
+  if (i === 2) return '#f9a825'; // O - amarillo -> ámbar oscuro
+  if (i === 7) return '#ef6c00'; // L - naranja -> naranja oscuro
+  return color;
+});
+
+const GRID_COLOR = { dark: '#22222e', light: '#d0d0dc' };
+
 const PIECES = [
   null,
   [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
@@ -39,8 +49,11 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const themeToggle = document.getElementById('theme-toggle');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let activeColors = COLORS;
+let gridColor = GRID_COLOR.dark;
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -158,7 +171,7 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
+  const color = activeColors[colorIndex];
   context.globalAlpha = alpha ?? 1;
   context.fillStyle = color;
   context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
@@ -169,7 +182,7 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
 }
 
 function drawGrid() {
-  ctx.strokeStyle = '#22222e';
+  ctx.strokeStyle = gridColor;
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -224,6 +237,14 @@ function endGame() {
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
   overlay.classList.remove('hidden');
+}
+
+function applyTheme(isLight) {
+  document.body.classList.toggle('light-theme', isLight);
+  activeColors = isLight ? LIGHT_COLORS : COLORS;
+  gridColor = isLight ? GRID_COLOR.light : GRID_COLOR.dark;
+  draw();
+  drawNext();
 }
 
 function togglePause() {
@@ -300,5 +321,6 @@ document.addEventListener('keydown', e => {
 });
 
 restartBtn.addEventListener('click', init);
+themeToggle.addEventListener('change', () => applyTheme(themeToggle.checked));
 
 init();
