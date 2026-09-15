@@ -44,6 +44,7 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - **Pausa** y **Game Over** con opción de reinicio.
 - **Power-ups**: cada 5–7 líneas eliminadas (al azar) aparece una pieza especial marcada con una letra; su efecto se activa al asentarse. Solo hay uno a la vez.
   - **Gravedad (G)**: compacta todos los huecos del tablero haciendo caer los bloques de cada columna. Si se completan filas, se eliminan y puntúan.
+  - **Bomba (B)**: pieza de 1×1 que, al asentarse, destruye un área de 3×3 a su alrededor. Si aparece bloqueada (lo que provocaría Game Over), se evalúa la explosión en ese punto: si con ella la siguiente pieza cabe, explota y la partida continúa; si no, es Game Over.
 
 ---
 
