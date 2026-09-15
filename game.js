@@ -14,6 +14,7 @@ const COLORS = [
   '#64b5f6', // J - blue
   '#ffb74d', // L - orange
   '#90a4ae', // N - tuerca (gris acero)
+  '#ec407a', // B - bomba (power-up, no está en PIECES)
 ];
 
 // En modo claro el amarillo y el naranja pierden contraste contra el fondo
@@ -42,9 +43,11 @@ const PIECES = [
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
 // Power-ups: aparecen como pieza especial tras eliminar 5–7 líneas (uno a la
-// vez) y su efecto se aplica al asentarse la pieza.
+// vez) y su efecto se aplica al asentarse la pieza. `shape` es opcional: sin
+// ella el power-up usa una forma normal aleatoria.
 const POWER_UPS = {
-  gravity: { mark: 'G', apply: applyGravity }, // Gravedad: compacta los huecos
+  gravity: { mark: 'G', apply: applyGravity },              // Gravedad: compacta los huecos
+  bomb:    { mark: 'B', shape: [[9]], apply: applyBomb },   // Bomba: destruye un área 3x3
 };
 const POWER_UP_MIN_LINES = 5;
 const POWER_UP_MAX_LINES = 7;
@@ -96,14 +99,43 @@ function applyGravity() {
   }
 }
 
-function collide(shape, ox, oy) {
+// Vacía el área 3x3 centrada en (cx, cy), recortada a los límites del tablero.
+function explodeArea(grid, cx, cy) {
+  for (let r = Math.max(0, cy - 1); r <= Math.min(ROWS - 1, cy + 1); r++)
+    for (let c = Math.max(0, cx - 1); c <= Math.min(COLS - 1, cx + 1); c++)
+      grid[r][c] = 0;
+}
+
+// La bomba es 1x1, así que (x, y) es su propia celda.
+function applyBomb(piece) {
+  explodeArea(board, piece.x, piece.y);
+}
+
+function createPowerUpPiece(id) {
+  const piece = randomPiece();
+  const { shape } = POWER_UPS[id];
+  if (shape) {
+    piece.shape = shape.map(row => [...row]);
+    piece.type = shape.flat().find(v => v);
+    piece.x = Math.floor(COLS / 2) - Math.floor(piece.shape[0].length / 2);
+  }
+  piece.powerUp = id;
+  return piece;
+}
+
+function randomPowerUpId() {
+  const ids = Object.keys(POWER_UPS);
+  return ids[Math.floor(Math.random() * ids.length)];
+}
+
+function collide(shape, ox, oy, grid = board) {
   for (let r = 0; r < shape.length; r++) {
     for (let c = 0; c < shape[r].length; c++) {
       if (!shape[r][c]) continue;
       const nx = ox + c;
       const ny = oy + r;
       if (nx < 0 || nx >= COLS || ny >= ROWS) return true;
-      if (ny >= 0 && board[ny][nx]) return true;
+      if (ny >= 0 && grid[ny][nx]) return true;
     }
   }
   return false;
@@ -187,7 +219,7 @@ function softDrop() {
 function lockPiece() {
   merge();
   if (current.powerUp) {
-    POWER_UPS[current.powerUp].apply();
+    POWER_UPS[current.powerUp].apply(current);
     resetPowerUpCycle();
   }
   clearLines();
@@ -198,10 +230,22 @@ function spawn() {
   current = next;
   next = randomPiece();
   if (powerUpState === 'queued') {
-    next.powerUp = 'gravity';
+    next = createPowerUpPiece(randomPowerUpId());
     powerUpState = 'inPlay';
   }
   if (collide(current.shape, current.x, current.y)) {
+    // Bomba bloqueada al aparecer: se simula la explosión en su posición; si
+    // así la siguiente pieza cabe, se aplica y la partida continúa.
+    if (current.powerUp === 'bomb') {
+      const trial = board.map(row => [...row]);
+      explodeArea(trial, current.x, current.y);
+      if (!collide(next.shape, next.x, next.y, trial)) {
+        board = trial;
+        resetPowerUpCycle();
+        spawn();
+        return;
+      }
+    }
     endGame();
   }
   drawNext();
