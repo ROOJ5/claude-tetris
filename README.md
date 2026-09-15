@@ -42,6 +42,8 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - **Sistema de puntuación** clásico de Tetris (100 / 300 / 500 / 800 multiplicado por nivel).
 - **Niveles** que aumentan cada 10 líneas y aceleran la caída.
 - **Pausa** y **Game Over** con opción de reinicio.
+- **Power-ups**: cada 5–7 líneas eliminadas (al azar) aparece una pieza especial marcada con una letra; su efecto se activa al asentarse. Solo hay uno a la vez.
+  - **Gravedad (G)**: compacta todos los huecos del tablero haciendo caer los bloques de cada columna. Si se completan filas, se eliminan y puntúan.
 
 ---
 
