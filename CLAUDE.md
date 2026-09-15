@@ -23,7 +23,7 @@ Three files: `index.html` (DOM + two canvases + overlay), `style.css` (dark/retr
 Key design points in `game.js`:
 
 - **Global mutable state**: `board`, `current`, `next`, `score`, `lines`, `level`, `paused`, `gameOver`, `lastTime`, `dropAccum`, `dropInterval`, `animId` are module-level `let`s, all (re)initialized in `init()`. The restart button just calls `init()`.
-- **Piece type = color index**: `PIECES[i]` and `COLORS[i]` share indices 1–7 (index 0 is `null`). Shape matrices store the type number in filled cells, and `board` cells store that same number (0 = empty), so rendering reads the color straight from the cell value.
+- **Piece type = color index**: `PIECES[i]` and `COLORS[i]` share indices 1–8 (index 0 is `null`). Shape matrices store the type number in filled cells, and `board` cells store that same number (0 = empty), so rendering reads the color straight from the cell value.
 - **Collision** (`collide(shape, ox, oy)`) is the single source of truth for movement, rotation (`tryRotate` with horizontal kicks `[0,-1,1,-2,2]`), ghost projection (`ghostY`), gravity, and game-over detection in `spawn()`.
 - **Lock pipeline**: `lockPiece()` → `merge()` → `clearLines()` (updates lines/score/level/`dropInterval`) → `spawn()` (promotes `next` to `current`, game over if it collides immediately).
 - **Loop**: `requestAnimationFrame`-driven `loop(ts)` accumulates elapsed time and applies gravity when `dropAccum >= dropInterval`. Pause/game over work by cancelling the rAF (`animId`); resuming resets `lastTime` and calls `loop` again. Input is handled synchronously in the `keydown` listener, independent of the loop.
