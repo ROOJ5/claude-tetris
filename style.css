@@ -128,6 +128,64 @@ body {
   border-radius: 4px;
 }
 
+/* ---- Records ---- */
+.highscore-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.highscore-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  font-family: 'Courier New', Courier, monospace;
+  color: var(--controls-text);
+}
+
+.highscore-list li.empty {
+  justify-content: center;
+  font-style: italic;
+}
+
+.highscore-list li.highlight {
+  color: var(--value-color);
+  font-weight: 700;
+}
+
+.best-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--controls-text);
+}
+
+.best-stats strong {
+  color: var(--value-color);
+}
+
+#reset-scores-btn {
+  margin-top: 4px;
+  background: transparent;
+  color: var(--overlay-title-color);
+  border: 1px solid var(--overlay-title-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.15s, color 0.15s;
+}
+
+#reset-scores-btn:hover {
+  background: var(--overlay-title-color);
+  color: var(--bg);
+}
+
 /* ---- Toggle de tema ---- */
 .theme-toggle-section {
   flex-direction: row;
@@ -242,6 +300,48 @@ kbd {
   font-family: 'Courier New', Courier, monospace;
   font-size: 14px;
   color: var(--overlay-score-color);
+}
+
+#overlay-stats {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  color: var(--controls-text);
+}
+
+#name-entry {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#name-entry.hidden {
+  display: none;
+}
+
+#player-name-input {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 13px;
+  width: 130px;
+}
+
+#save-score-btn {
+  background: var(--restart-bg);
+  color: var(--restart-color);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#save-score-btn:hover {
+  background: var(--restart-hover-bg);
 }
 
 #restart-btn {
