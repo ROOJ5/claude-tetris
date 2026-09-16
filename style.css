@@ -19,31 +19,84 @@
   --restart-hover-bg: #9bbdff;
   --switch-bg: #22223a;
   --switch-border: #3a3a5a;
-  --switch-knob: #7aa2f7;
 }
 
-body.light-theme {
-  --bg: #f4f4f8;
-  --text: #24243a;
-  --title-color: #3f5ec4;
-  --board-bg: #ffffff;
-  --board-border: #c7c7d6;
-  --board-shadow: rgba(0, 0, 0, 0.15);
-  --label-color: #6b6b85;
-  --value-color: #3f5ec4;
-  --kbd-bg: #e4e4ee;
-  --kbd-border: #c7c7d6;
-  --kbd-color: #45455c;
-  --controls-text: #55556e;
-  --overlay-bg: rgba(255, 255, 255, 0.8);
-  --overlay-title-color: #c94f4f;
-  --overlay-score-color: #3f5ec4;
-  --restart-bg: #3f5ec4;
-  --restart-color: #ffffff;
-  --restart-hover-bg: #5c7bdc;
-  --switch-bg: #d5d5e4;
-  --switch-border: #b0b0c6;
-  --switch-knob: #3f5ec4;
+/* ---- Skin: Neón (fondo negro, acentos brillantes) ---- */
+body.skin-neon {
+  --bg: #000000;
+  --text: #e0fbff;
+  --title-color: #00fff2;
+  --board-bg: #000000;
+  --board-border: #00fff2;
+  --board-shadow: rgba(0, 255, 242, 0.35);
+  --label-color: #5ad1ff;
+  --value-color: #00fff2;
+  --kbd-bg: #001a1a;
+  --kbd-border: #00fff2;
+  --kbd-color: #7dfcff;
+  --controls-text: #5ad1ff;
+  --overlay-bg: rgba(0, 0, 0, 0.85);
+  --overlay-title-color: #ff003c;
+  --overlay-score-color: #00fff2;
+  --restart-bg: #00fff2;
+  --restart-color: #001010;
+  --restart-hover-bg: #7dfcff;
+  --switch-bg: #001a1a;
+  --switch-border: #00fff2;
+}
+
+/* ---- Skin: Pastel (colores suaves, fondo claro) ---- */
+body.skin-pastel {
+  --bg: #fdf6f0;
+  --text: #5b4b5a;
+  --title-color: #c99bd6;
+  --board-bg: #fffaf5;
+  --board-border: #e6d3ea;
+  --board-shadow: rgba(150, 120, 160, 0.15);
+  --label-color: #a08ba0;
+  --value-color: #c99bd6;
+  --kbd-bg: #f3e6f0;
+  --kbd-border: #e6d3ea;
+  --kbd-color: #8a7590;
+  --controls-text: #9a8698;
+  --overlay-bg: rgba(255, 250, 245, 0.85);
+  --overlay-title-color: #e29aa4;
+  --overlay-score-color: #c99bd6;
+  --restart-bg: #c99bd6;
+  --restart-color: #fffaf5;
+  --restart-hover-bg: #dcb6e6;
+  --switch-bg: #f3e6f0;
+  --switch-border: #e6d3ea;
+}
+
+/* ---- Skin: Pixel Art (paleta retro + tipografía monoespaciada) ---- */
+body.skin-pixel {
+  --bg: #10121c;
+  --text: #d7d7d7;
+  --title-color: #ffd54f;
+  --board-bg: #0c0e16;
+  --board-border: #3a3a4a;
+  --board-shadow: rgba(0, 0, 0, 0.7);
+  --label-color: #6a6a7a;
+  --value-color: #ffd54f;
+  --kbd-bg: #1c1e2a;
+  --kbd-border: #3a3a4a;
+  --kbd-color: #aaaaaa;
+  --controls-text: #888888;
+  --overlay-bg: rgba(10, 10, 20, 0.85);
+  --overlay-title-color: #e57373;
+  --overlay-score-color: #ffd54f;
+  --restart-bg: #ffd54f;
+  --restart-color: #10121c;
+  --restart-hover-bg: #ffe082;
+  --switch-bg: #1c1e2a;
+  --switch-border: #3a3a4a;
+}
+
+body.skin-pixel,
+body.skin-pixel .value,
+body.skin-pixel #overlay-score {
+  font-family: 'Courier New', Courier, monospace;
 }
 
 *, *::before, *::after {
@@ -128,55 +181,19 @@ body {
   border-radius: 4px;
 }
 
-/* ---- Toggle de tema ---- */
-.theme-toggle-section {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.theme-switch {
-  position: relative;
-  display: inline-block;
-  width: 40px;
-  height: 22px;
-  flex-shrink: 0;
-}
-
-.theme-switch input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.theme-switch-slider {
-  position: absolute;
-  inset: 0;
+/* ---- Selector de skin ---- */
+.skin-select {
   background: var(--switch-bg);
+  color: var(--text);
   border: 1px solid var(--switch-border);
-  border-radius: 22px;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
 }
 
-.theme-switch-slider::before {
-  content: '';
-  position: absolute;
-  height: 14px;
-  width: 14px;
-  left: 3px;
-  top: 3px;
-  background: var(--switch-knob);
-  border-radius: 50%;
-  transition: transform 0.15s, background 0.15s;
-}
-
-.theme-switch input:checked + .theme-switch-slider::before {
-  transform: translateX(18px);
-}
-
-.theme-switch input:focus-visible + .theme-switch-slider {
+.skin-select:focus-visible {
   outline: 2px solid var(--value-color);
   outline-offset: 2px;
 }
