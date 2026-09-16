@@ -64,12 +64,39 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const pauseOverlay = document.getElementById('pause-overlay');
+const pauseResumeBtn = document.getElementById('pause-resume-btn');
+const pauseRestartBtn = document.getElementById('pause-restart-btn');
+const pauseControlsBtn = document.getElementById('pause-controls-btn');
+const pauseControlsPanel = document.getElementById('pause-controls-panel');
+const startLevelSelect = document.getElementById('start-level-select');
+
+const START_LEVEL_KEY = 'tetris-start-level';
+const MIN_START_LEVEL = 1;
+const MAX_START_LEVEL = 9;
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 // powerUpState: 'none' (contando líneas) | 'queued' (sale en la próxima pieza) | 'inPlay'
 let powerUpState, linesSincePowerUp, powerUpThreshold;
 let activeColors = COLORS;
 let gridColor = GRID_COLOR.dark;
+let startLevel = loadStartLevel();
+
+function clampStartLevel(value) {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n)) return MIN_START_LEVEL;
+  return Math.min(MAX_START_LEVEL, Math.max(MIN_START_LEVEL, n));
+}
+
+function loadStartLevel() {
+  const stored = localStorage.getItem(START_LEVEL_KEY);
+  return stored === null ? MIN_START_LEVEL : clampStartLevel(stored);
+}
+
+function saveStartLevel(value) {
+  startLevel = clampStartLevel(value);
+  localStorage.setItem(START_LEVEL_KEY, String(startLevel));
+}
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -182,8 +209,8 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
-    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    level = startLevel + Math.floor(lines / 10);
+    dropInterval = computeDropInterval(level);
     // solo un power-up a la vez: no se cuentan líneas mientras hay uno pendiente
     if (powerUpState === 'none') {
       linesSincePowerUp += cleared;
@@ -191,6 +218,10 @@ function clearLines() {
     }
     updateHUD();
   }
+}
+
+function computeDropInterval(lvl) {
+  return Math.max(100, 1000 - (lvl - 1) * 90);
 }
 
 function ghostY() {
@@ -359,17 +390,27 @@ function applyTheme(isLight) {
   drawNext();
 }
 
+function openPauseMenu() {
+  cancelAnimationFrame(animId);
+  pauseControlsPanel.classList.add('hidden');
+  startLevelSelect.value = String(startLevel);
+  pauseOverlay.classList.remove('hidden');
+}
+
+function closePauseMenu() {
+  pauseOverlay.classList.add('hidden');
+  pauseControlsPanel.classList.add('hidden');
+}
+
 function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    closePauseMenu();
     lastTime = performance.now();
     loop(lastTime);
   } else {
-    cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
+    openPauseMenu();
   }
 }
 
@@ -396,10 +437,10 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  level = startLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = computeDropInterval(level);
   dropAccum = 0;
   lastTime = performance.now();
   resetPowerUpCycle();
@@ -407,12 +448,13 @@ function init() {
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  closePauseMenu();
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
+  if (e.code === 'KeyP' || e.code === 'Escape') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
@@ -438,5 +480,17 @@ document.addEventListener('keydown', e => {
 
 restartBtn.addEventListener('click', init);
 themeToggle.addEventListener('change', () => applyTheme(themeToggle.checked));
+
+pauseResumeBtn.addEventListener('click', togglePause);
+pauseRestartBtn.addEventListener('click', init);
+pauseControlsBtn.addEventListener('click', () => {
+  pauseControlsPanel.classList.toggle('hidden');
+});
+startLevelSelect.addEventListener('change', () => {
+  saveStartLevel(startLevelSelect.value);
+  startLevelSelect.value = String(startLevel);
+});
+
+startLevelSelect.value = String(startLevel);
 
 init();
