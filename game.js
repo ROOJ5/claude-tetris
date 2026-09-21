@@ -17,6 +17,17 @@ const COLORS = [
   '#ec407a', // B - bomba (power-up, no está en PIECES)
 ];
 
+// En modo claro el amarillo y el naranja pierden contraste contra el fondo
+// claro del tablero; se oscurecen para mantenerse legibles.
+const LIGHT_COLORS = COLORS.map((color, i) => {
+  if (i === 2) return '#f9a825'; // O - amarillo -> ámbar oscuro
+  if (i === 7) return '#ef6c00'; // L - naranja -> naranja oscuro
+  if (i === 8) return '#607d8b'; // N - gris acero -> gris azulado oscuro
+  return color;
+});
+
+const LIGHT_GRID_COLOR = '#d0d0dc';
+
 // Paleta Neón: colores muy saturados sobre fondo negro, con brillo (glow).
 const NEON_COLORS = [
   null,
@@ -105,6 +116,7 @@ const playerNameInput = document.getElementById('player-name-input');
 const saveScoreBtn = document.getElementById('save-score-btn');
 const restartBtn = document.getElementById('restart-btn');
 const skinSelect = document.getElementById('skin-select');
+const themeToggle = document.getElementById('theme-toggle');
 const highScoreListEl = document.getElementById('highscore-list');
 const bestComboEl = document.getElementById('best-combo');
 const currentComboEl = document.getElementById('current-combo');
@@ -127,7 +139,11 @@ let board, current, next, score, lines, level, paused, gameOver, lastTime, dropA
 let powerUpState, linesSincePowerUp, powerUpThreshold;
 // combo: rachas de piezas consecutivas que eliminan al menos una línea.
 let combo, maxCombo, maxLinesInGame;
+// La skin decide el efecto de dibujo y la paleta base; el modo claro es una
+// capa encima que sustituye la paleta del tablero por la versión legible sobre
+// fondo claro (misma que antes de existir las skins).
 let currentSkin = DEFAULT_SKIN;
+let lightTheme = false;
 let activeColors = SKINS[currentSkin].colors;
 let gridColor = SKINS[currentSkin].grid;
 let startLevel = loadStartLevel();
@@ -593,13 +609,25 @@ function saveCurrentScore() {
   renderHighScores(newEntry);
 }
 
+function refreshPalette() {
+  activeColors = lightTheme ? LIGHT_COLORS : SKINS[currentSkin].colors;
+  gridColor = lightTheme ? LIGHT_GRID_COLOR : SKINS[currentSkin].grid;
+}
+
+function applyTheme(isLight) {
+  lightTheme = isLight;
+  document.body.classList.toggle('light-theme', isLight);
+  refreshPalette();
+  draw();
+  drawNext();
+}
+
 function applySkin(skinId) {
   if (!SKINS[skinId]) skinId = DEFAULT_SKIN;
   currentSkin = skinId;
   for (const id of Object.keys(SKINS)) document.body.classList.remove(`skin-${id}`);
   document.body.classList.add(`skin-${skinId}`);
-  activeColors = SKINS[skinId].colors;
-  gridColor = SKINS[skinId].grid;
+  refreshPalette();
   if (skinSelect) skinSelect.value = skinId;
   try { localStorage.setItem(SKIN_STORAGE_KEY, skinId); } catch (e) { /* almacenamiento no disponible */ }
   draw();
@@ -709,6 +737,7 @@ document.addEventListener('keydown', e => {
 
 restartBtn.addEventListener('click', init);
 if (skinSelect) skinSelect.addEventListener('change', () => applySkin(skinSelect.value));
+themeToggle.addEventListener('change', () => applyTheme(themeToggle.checked));
 saveScoreBtn.addEventListener('click', saveCurrentScore);
 playerNameInput.addEventListener('keydown', e => {
   if (e.code === 'Enter') saveCurrentScore();

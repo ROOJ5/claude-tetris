@@ -19,6 +19,7 @@
   --restart-hover-bg: #9bbdff;
   --switch-bg: #22223a;
   --switch-border: #3a3a5a;
+  --switch-knob: #7aa2f7;
 }
 
 /* ---- Skin: Neón (fondo negro, acentos brillantes) ---- */
@@ -43,6 +44,7 @@ body.skin-neon {
   --restart-hover-bg: #7dfcff;
   --switch-bg: #001a1a;
   --switch-border: #00fff2;
+  --switch-knob: #00fff2;
 }
 
 /* ---- Skin: Pastel (colores suaves, fondo claro) ---- */
@@ -67,6 +69,7 @@ body.skin-pastel {
   --restart-hover-bg: #dcb6e6;
   --switch-bg: #f3e6f0;
   --switch-border: #e6d3ea;
+  --switch-knob: #c99bd6;
 }
 
 /* ---- Skin: Pixel Art (paleta retro + tipografía monoespaciada) ---- */
@@ -91,12 +94,40 @@ body.skin-pixel {
   --restart-hover-bg: #ffe082;
   --switch-bg: #1c1e2a;
   --switch-border: #3a3a4a;
+  --switch-knob: #ffd54f;
 }
 
 body.skin-pixel,
 body.skin-pixel .value,
 body.skin-pixel #overlay-score {
   font-family: 'Courier New', Courier, monospace;
+}
+
+/* ---- Modo claro ----
+   Va después de las skins: misma especificidad, así que gana por orden y se
+   aplica encima de cualquiera de ellas. */
+body.light-theme {
+  --bg: #f4f4f8;
+  --text: #24243a;
+  --title-color: #3f5ec4;
+  --board-bg: #ffffff;
+  --board-border: #c7c7d6;
+  --board-shadow: rgba(0, 0, 0, 0.15);
+  --label-color: #6b6b85;
+  --value-color: #3f5ec4;
+  --kbd-bg: #e4e4ee;
+  --kbd-border: #c7c7d6;
+  --kbd-color: #45455c;
+  --controls-text: #55556e;
+  --overlay-bg: rgba(255, 255, 255, 0.8);
+  --overlay-title-color: #c94f4f;
+  --overlay-score-color: #3f5ec4;
+  --restart-bg: #3f5ec4;
+  --restart-color: #ffffff;
+  --restart-hover-bg: #5c7bdc;
+  --switch-bg: #d5d5e4;
+  --switch-border: #b0b0c6;
+  --switch-knob: #3f5ec4;
 }
 
 *, *::before, *::after {
@@ -121,13 +152,84 @@ body {
   position: relative;
 }
 
+/* El título y el toggle de tema comparten fila. Rejilla de tres columnas
+   (1fr | título | 1fr) para que el título quede centrado y el toggle a su
+   derecha: si el toggle necesita más ancho la fila crece en vez de solaparse. */
+.title-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
 .game-title {
+  grid-column: 2;
   text-align: center;
   font-size: 28px;
   font-weight: 800;
   letter-spacing: 8px;
   color: var(--title-color);
-  margin-bottom: 16px;
+}
+
+/* ---- Toggle de tema ---- */
+.theme-toggle-section {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-toggle-section .label {
+  white-space: nowrap;
+}
+
+.theme-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.theme-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.theme-switch-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--switch-bg);
+  border: 1px solid var(--switch-border);
+  border-radius: 22px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.theme-switch-slider::before {
+  content: '';
+  position: absolute;
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  top: 3px;
+  background: var(--switch-knob);
+  border-radius: 50%;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.theme-switch input:checked + .theme-switch-slider::before {
+  transform: translateX(18px);
+}
+
+.theme-switch input:focus-visible + .theme-switch-slider {
+  outline: 2px solid var(--value-color);
+  outline-offset: 2px;
 }
 
 .game-container {
