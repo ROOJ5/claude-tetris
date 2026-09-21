@@ -219,7 +219,7 @@ kbd {
   border-radius: 4px;
 }
 
-.overlay.hidden {
+.hidden {
   display: none;
 }
 
@@ -231,7 +231,18 @@ kbd {
   align-items: center;
 }
 
-#overlay-title {
+#gameover-view,
+#pause-view,
+#pause-main,
+#pause-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+#overlay-title,
+#pause-title {
   font-size: 28px;
   font-weight: 800;
   letter-spacing: 4px;
@@ -244,7 +255,7 @@ kbd {
   color: var(--overlay-score-color);
 }
 
-#restart-btn {
+.menu-btn {
   margin-top: 8px;
   background: var(--restart-bg);
   color: var(--restart-color);
@@ -258,6 +269,34 @@ kbd {
   transition: background 0.15s;
 }
 
-#restart-btn:hover {
+.menu-btn:hover {
   background: var(--restart-hover-bg);
+}
+
+.menu-btn-secondary {
+  background: transparent;
+  color: var(--overlay-score-color);
+  border: 1px solid var(--kbd-border);
+}
+
+.menu-btn-secondary:hover {
+  background: var(--kbd-bg);
+}
+
+.level-select-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--controls-text);
+}
+
+.level-select-row select {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  color: var(--kbd-color);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 13px;
 }
