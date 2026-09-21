@@ -28,6 +28,41 @@ const LIGHT_COLORS = COLORS.map((color, i) => {
 
 const GRID_COLOR = { dark: '#22222e', light: '#d0d0dc' };
 
+const NEON_COLORS = [
+  null,
+  '#00e5ff', // I - cyan
+  '#ffee00', // O - amarillo
+  '#e040fb', // T - magenta
+  '#00ff6a', // S - verde
+  '#ff1744', // Z - rojo
+  '#2979ff', // J - azul
+  '#ff9100', // L - naranja
+  '#b0bec5', // N - gris claro
+  '#ff2d95', // B - bomba
+];
+
+const PASTEL_COLORS = [
+  null,
+  '#a8dee6', // I
+  '#f9e79f', // O
+  '#d7bde2', // T
+  '#b8e0c4', // S
+  '#f5b7b1', // Z
+  '#aed6f1', // J
+  '#fad2a0', // L
+  '#cfd8dc', // N
+  '#f4c2d7', // B - bomba
+];
+
+const SKINS = {
+  retro:  { label: 'Retro',    colors: COLORS,        board: null },
+  neon:   { label: 'Neon',     colors: NEON_COLORS,   board: '#000000' },
+  pastel: { label: 'Pastel',   colors: PASTEL_COLORS, board: null },
+  pixel:  { label: 'Pixel Art', colors: COLORS,        board: null },
+};
+const SKIN_IDS = Object.keys(SKINS);
+const DEFAULT_SKIN = 'retro';
+
 const PIECES = [
   null,
   [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
@@ -64,12 +99,42 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const skinSelect = document.getElementById('skin-select');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 // powerUpState: 'none' (contando líneas) | 'queued' (sale en la próxima pieza) | 'inPlay'
 let powerUpState, linesSincePowerUp, powerUpThreshold;
-let activeColors = COLORS;
-let gridColor = GRID_COLOR.dark;
+
+function loadSkin() {
+  const saved = localStorage.getItem('tetris-skin');
+  return SKIN_IDS.includes(saved) ? saved : DEFAULT_SKIN;
+}
+
+let currentSkin = loadSkin();
+let isLightTheme = false;
+let activeColors, gridColor;
+
+// Fija activeColors/gridColor a partir de currentSkin/isLightTheme sin redibujar
+// (se usa en la carga inicial, antes de que init() dibuje por primera vez).
+function initVisualState() {
+  const skin = SKINS[currentSkin];
+  if (currentSkin === 'neon') {
+    activeColors = skin.colors;
+    gridColor = '#1a1a1a';
+  } else if (currentSkin === 'pastel') {
+    activeColors = skin.colors;
+    gridColor = isLightTheme ? GRID_COLOR.light : GRID_COLOR.dark;
+  } else {
+    activeColors = isLightTheme ? LIGHT_COLORS : skin.colors;
+    gridColor = isLightTheme ? GRID_COLOR.light : GRID_COLOR.dark;
+  }
+}
+
+function recomputeActiveVisuals() {
+  initVisualState();
+  draw();
+  drawNext();
+}
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -257,15 +322,53 @@ function updateHUD() {
   levelEl.textContent = level;
 }
 
+// Bloque redondeado (skin pastel): path manual, sin depender de ctx.roundRect.
+function drawRoundedBlock(context, x, y, w, h, r, color) {
+  context.fillStyle = color;
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.arcTo(x + w, y, x + w, y + h, r);
+  context.arcTo(x + w, y + h, x, y + h, r);
+  context.arcTo(x, y + h, x, y, r);
+  context.arcTo(x, y, x + w, y, r);
+  context.closePath();
+  context.fill();
+  context.fillStyle = 'rgba(255,255,255,0.18)';
+  context.fillRect(x, y, w, 3);
+}
+
+// Textura tipo dither (skin pixel art): overlay fijo, barato de repetir cada frame.
+function drawPixelTexture(context, x, y, size, color) {
+  const step = size / 4;
+  context.fillStyle = 'rgba(0,0,0,0.25)';
+  for (let i = 0; i < 4; i++)
+    for (let j = 0; j < 4; j++)
+      if ((i + j) % 2 === 1) context.fillRect(x + i * step, y + j * step, step, step);
+}
+
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
   const color = activeColors[colorIndex];
   context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+  if (currentSkin === 'neon') {
+    context.shadowColor = color;
+    context.shadowBlur = 14;
+    context.fillStyle = color;
+    context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+    context.shadowBlur = 0;
+  } else if (currentSkin === 'pastel') {
+    drawRoundedBlock(context, x * size + 1, y * size + 1, size - 2, size - 2, Math.min(6, size * 0.2), color);
+  } else if (currentSkin === 'pixel') {
+    context.fillStyle = color;
+    context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+    drawPixelTexture(context, x * size + 1, y * size + 1, size - 2, color);
+  } else {
+    context.fillStyle = color;
+    context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+    // highlight
+    context.fillStyle = 'rgba(255,255,255,0.12)';
+    context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+  }
   context.globalAlpha = 1;
 }
 
@@ -315,7 +418,13 @@ function drawGrid() {
 }
 
 function draw() {
+  ctx.shadowBlur = 0;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const skinBoard = SKINS[currentSkin].board;
+  if (skinBoard) {
+    ctx.fillStyle = skinBoard;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
   drawGrid();
 
   // board
@@ -335,7 +444,13 @@ function draw() {
 
 function drawNext() {
   const NB = 30;
+  nextCtx.shadowBlur = 0;
   nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+  const skinBoard = SKINS[currentSkin].board;
+  if (skinBoard) {
+    nextCtx.fillStyle = skinBoard;
+    nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+  }
   const shape = next.shape;
   const offX = Math.floor((4 - shape[0].length) / 2);
   const offY = Math.floor((4 - shape.length) / 2);
@@ -353,10 +468,8 @@ function endGame() {
 
 function applyTheme(isLight) {
   document.body.classList.toggle('light-theme', isLight);
-  activeColors = isLight ? LIGHT_COLORS : COLORS;
-  gridColor = isLight ? GRID_COLOR.light : GRID_COLOR.dark;
-  draw();
-  drawNext();
+  isLightTheme = isLight;
+  recomputeActiveVisuals();
 }
 
 function togglePause() {
@@ -439,4 +552,12 @@ document.addEventListener('keydown', e => {
 restartBtn.addEventListener('click', init);
 themeToggle.addEventListener('change', () => applyTheme(themeToggle.checked));
 
+skinSelect.value = currentSkin;
+skinSelect.addEventListener('change', () => {
+  currentSkin = SKIN_IDS.includes(skinSelect.value) ? skinSelect.value : DEFAULT_SKIN;
+  localStorage.setItem('tetris-skin', currentSkin);
+  recomputeActiveVisuals();
+});
+
+initVisualState();
 init();
