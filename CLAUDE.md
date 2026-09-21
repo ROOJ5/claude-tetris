@@ -18,7 +18,7 @@ There are no automated tests; verify changes by playing the game in a browser.
 
 ## Architecture
 
-Three files: `index.html` (DOM + two canvases + overlay), `style.css` (dark/retro theme), `game.js` (all logic). `game.js` is a plain classic script loaded at the end of `<body>` — it grabs DOM elements by id at top level, so element ids in `index.html` (`board`, `next-canvas`, `score`, `lines`, `level`, `overlay`, `overlay-title`, `overlay-score`, `restart-btn`) are a contract with the script.
+Three files: `index.html` (DOM + two canvases + two overlays), `style.css` (one theme per skin), `game.js` (all logic). `game.js` is a plain classic script loaded at the end of `<body>` — it grabs DOM elements by id at top level, so element ids in `index.html` (`board`, `next-canvas`, `score`, `lines`, `level`, `overlay`, `overlay-title`, `overlay-score`, `overlay-stats`, `name-entry`, `player-name-input`, `save-score-btn`, `restart-btn`, `skin-select`, `highscore-list`, `best-combo`, `current-combo`, `best-lines`, `current-lines-stat`, `reset-scores-btn`, `pause-overlay`, `pause-resume-btn`, `pause-restart-btn`, `pause-controls-btn`, `pause-controls-panel`, `start-level-select`) are a contract with the script.
 
 Key design points in `game.js`:
 
@@ -30,9 +30,12 @@ Key design points in `game.js`:
   - `gravity` (random shape): `applyGravity` compacts each column downward.
   - `bomb` (1×1, type 9): `applyBomb` → `explodeArea(grid, cx, cy)` clears a clipped 3×3 around the cell. **Game-over rescue** in `spawn()`: if a bomb spawns colliding, the explosion is simulated on a board copy (`collide` takes an optional `grid` argument); if `next` would then fit, the copy becomes `board`, the cycle resets and `spawn()` recurses; otherwise normal `endGame()` with the board untouched.
 - **Loop**: `requestAnimationFrame`-driven `loop(ts)` accumulates elapsed time and applies gravity when `dropAccum >= dropInterval`. Pause/game over work by cancelling the rAF (`animId`); resuming resets `lastTime` and calls `loop` again. Input is handled synchronously in the `keydown` listener, independent of the loop.
-- **Scoring/speed**: `LINE_SCORES[cleared] * level`; soft drop +1/row, hard drop +2/row; level = `floor(lines/10)+1`; `dropInterval = max(100, 1000 - (level-1)*90)`.
+- **Scoring/speed**: `LINE_SCORES[cleared] * level`; soft drop +1/row, hard drop +2/row; level = `startLevel + floor(lines/10)`; `dropInterval = computeDropInterval(level) = max(100, 1000 - (level-1)*90)`.
+- **Skins**: `SKINS` maps an id (`retro`, `neon`, `pastel`, `pixel`) to `{ label, colors, grid, effect }`. `applySkin(id)` swaps `activeColors`/`gridColor`, sets the `skin-<id>` class on `<body>` (each one redefines the CSS custom properties), persists to `localStorage` (`tetris-skin`) and redraws. `drawBlock` branches on `effect`: `flat`, `glow` (`shadowBlur`), `rounded` (`roundedRectPath`, also used by `drawPowerUpMark`) and `texture` (`drawPixelTexture`). `loadStoredSkin()` runs after `init()`. There is no light/dark toggle any more — the skin *is* the theme.
+- **Pause menu**: `P`/`Escape` toggles `paused`; `openPauseMenu`/`closePauseMenu` show `#pause-overlay` (resume, restart, controls, start-level select) instead of the game-over overlay. Game input stays blocked while `paused`. `startLevel` persists in `localStorage` (`tetris-start-level`, clamped 1–9) and only takes effect on the next `init()`.
+- **High scores**: top 5 `{ name, score, combo, lines }` in `localStorage` (`tetris-highscores`), read/written through `loadHighScores`/`saveHighScoresToStorage` (both fail soft). `clearLines()` returns the count so `lockPiece()` can track the `combo` streak and `maxCombo`. `endGame()` renders the table and, if `qualifiesForHighScore(score)`, shows the name field; `saveCurrentScore()` stores the entry and highlights it.
 
 ## Gotchas
 
 - Changing `COLS`, `ROWS`, or `BLOCK` requires updating the `<canvas id="board">` `width`/`height` in `index.html` (`COLS×BLOCK` × `ROWS×BLOCK`). The next-piece preview assumes a 4×4 grid of 30px cells (120×120 canvas, hardcoded `NB = 30`).
-- Resuming from pause (`togglePause`) does not re-add the `hidden` class to the overlay, so the "PAUSA" overlay stays visible after unpausing.
+- Adding a skin means touching both sides: an entry in `SKINS` (and a `drawBlock` branch if it needs a new `effect`), a `body.skin-<id>` block in `style.css` redefining the custom properties, and an `<option>` in `#skin-select`.
