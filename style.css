@@ -181,6 +181,29 @@ body {
   outline-offset: 2px;
 }
 
+/* ---- Selector de skin ---- */
+.skin-select-section {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#skin-select {
+  background: var(--kbd-bg);
+  color: var(--text);
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+#skin-select:focus-visible {
+  outline: 2px solid var(--value-color);
+  outline-offset: 2px;
+}
+
 /* ---- Controles ---- */
 .controls ul {
   list-style: none;
