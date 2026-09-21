@@ -300,3 +300,118 @@ kbd {
   font-family: inherit;
   font-size: 13px;
 }
+
+/* ---- Tabla de récords ---- */
+.records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 220px;
+  max-width: 80vw;
+}
+
+.records-empty {
+  font-size: 12px;
+  color: var(--controls-text);
+}
+
+.records-row {
+  display: grid;
+  grid-template-columns: 16px 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  color: var(--text);
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.records-rank {
+  color: var(--label-color);
+  font-weight: 700;
+}
+
+.records-name {
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.records-score {
+  color: var(--value-color);
+  font-weight: 700;
+}
+
+.records-detail {
+  color: var(--controls-text);
+  font-size: 10px;
+}
+
+.records-row.highlight {
+  background: var(--overlay-title-color);
+  color: var(--restart-color);
+}
+
+.records-row.highlight .records-score,
+.records-row.highlight .records-rank,
+.records-row.highlight .records-detail {
+  color: inherit;
+}
+
+/* ---- Ingreso de nombre para nuevo récord ---- */
+#name-entry {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#name-entry.hidden {
+  display: none;
+}
+
+#player-name {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--kbd-border);
+  background: var(--kbd-bg);
+  color: var(--text);
+  width: 120px;
+}
+
+#save-record-btn {
+  background: var(--restart-bg);
+  color: var(--restart-color);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#save-record-btn:hover {
+  background: var(--restart-hover-bg);
+}
+
+#reset-records-btn {
+  margin-top: 0;
+  background: transparent;
+  color: var(--controls-text);
+  border: 1px solid var(--kbd-border);
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.15s, color 0.15s;
+}
+
+#reset-records-btn:hover {
+  background: var(--kbd-bg);
+  color: var(--text);
+}
