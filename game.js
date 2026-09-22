@@ -28,6 +28,100 @@ const LIGHT_COLORS = COLORS.map((color, i) => {
 
 const GRID_COLOR = { dark: '#22222e', light: '#d0d0dc' };
 
+// Colores propios de cada skin (mismos índices 1-9 que PIECES/COLORS).
+const NEON_COLORS = [
+  null, '#00e5ff', '#faff00', '#e000ff', '#00ff6a',
+  '#ff2447', '#2979ff', '#ff9100', '#c0c0c0', '#ff2d9e',
+];
+const PASTEL_COLORS = [
+  null, '#a8e6ff', '#fff3b0', '#d9b8f3', '#b8f2c9',
+  '#ffb3ba', '#b3d1ff', '#ffd9b3', '#cfd8dc', '#ffb3d1',
+];
+// En claro los pasteles pierden contraste contra un fondo blanco; se oscurecen un poco.
+const PASTEL_LIGHT_COLORS = PASTEL_COLORS.map(c => c);
+PASTEL_LIGHT_COLORS[2] = '#f2c94c';
+
+function roundRectPath(context, x, y, w, h, r) {
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.arcTo(x + w, y, x + w, y + h, r);
+  context.arcTo(x + w, y + h, x, y + h, r);
+  context.arcTo(x, y + h, x, y, r);
+  context.arcTo(x, y, x + w, y, r);
+  context.closePath();
+}
+
+// Cada skin define su paleta (dark/light) y cómo dibujar un bloque ya resuelto
+// a un color concreto (drawBlock ya se encargó de traducir colorIndex -> color).
+const SKINS = {
+  retro: {
+    colors: COLORS,
+    lightColors: LIGHT_COLORS,
+    draw(context, x, y, color, size, alpha) {
+      context.globalAlpha = alpha;
+      context.fillStyle = color;
+      context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+      context.fillStyle = 'rgba(255,255,255,0.12)';
+      context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+      context.globalAlpha = 1;
+    },
+  },
+  neon: {
+    colors: NEON_COLORS,
+    lightColors: NEON_COLORS,
+    draw(context, x, y, color, size, alpha) {
+      const px = x * size + 3, py = y * size + 3, s = size - 6;
+      context.save();
+      context.globalAlpha = alpha;
+      context.shadowColor = color;
+      context.shadowBlur = size * 0.6;
+      context.fillStyle = color;
+      context.fillRect(px, py, s, s);
+      context.shadowBlur = 0;
+      context.strokeStyle = 'rgba(255,255,255,0.6)';
+      context.lineWidth = 1;
+      context.strokeRect(px + 0.5, py + 0.5, s - 1, s - 1);
+      context.restore();
+    },
+  },
+  pastel: {
+    colors: PASTEL_COLORS,
+    lightColors: PASTEL_LIGHT_COLORS,
+    draw(context, x, y, color, size, alpha) {
+      const px = x * size + 2, py = y * size + 2, s = size - 4;
+      const r = size * 0.22;
+      context.globalAlpha = alpha;
+      context.fillStyle = color;
+      roundRectPath(context, px, py, s, s, r);
+      context.fill();
+      context.fillStyle = 'rgba(255,255,255,0.4)';
+      roundRectPath(context, px, py, s, s * 0.35, r);
+      context.fill();
+      context.globalAlpha = 1;
+    },
+  },
+  pixel: {
+    colors: COLORS,
+    lightColors: LIGHT_COLORS,
+    draw(context, x, y, color, size, alpha) {
+      const px = x * size + 1, py = y * size + 1, s = size - 2;
+      context.globalAlpha = alpha;
+      context.fillStyle = color;
+      context.fillRect(px, py, s, s);
+      const cell = Math.max(3, Math.floor(size / 6));
+      context.fillStyle = 'rgba(0,0,0,0.15)';
+      for (let ry = 0; ry * cell < s; ry++)
+        for (let rx = 0; rx * cell < s; rx++)
+          if ((rx + ry) % 2 === 0) context.fillRect(px + rx * cell, py + ry * cell, cell, cell);
+      context.strokeStyle = 'rgba(255,255,255,0.25)';
+      context.lineWidth = 1;
+      context.strokeRect(px + 0.5, py + 0.5, s - 1, s - 1);
+      context.globalAlpha = 1;
+    },
+  },
+};
+const SKIN_STORAGE_KEY = 'tetris-skin';
+
 const PIECES = [
   null,
   [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
@@ -64,11 +158,15 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const skinSelect = document.getElementById('skin-select');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 // powerUpState: 'none' (contando líneas) | 'queued' (sale en la próxima pieza) | 'inPlay'
 let powerUpState, linesSincePowerUp, powerUpThreshold;
-let activeColors = COLORS;
+let isLight = false;
+let currentSkin = localStorage.getItem(SKIN_STORAGE_KEY) in SKINS
+  ? localStorage.getItem(SKIN_STORAGE_KEY)
+  : 'retro';
 let gridColor = GRID_COLOR.dark;
 
 function createBoard() {
@@ -259,14 +357,9 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = activeColors[colorIndex];
-  context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
-  context.globalAlpha = 1;
+  const skin = SKINS[currentSkin];
+  const palette = isLight ? skin.lightColors : skin.colors;
+  skin.draw(context, x, y, palette[colorIndex], size, alpha ?? 1);
 }
 
 // Marca de pieza especial: borde y letra con contorno oscuro (legible en ambos temas).
@@ -351,10 +444,18 @@ function endGame() {
   overlay.classList.remove('hidden');
 }
 
-function applyTheme(isLight) {
+function applyTheme(light) {
+  isLight = light;
   document.body.classList.toggle('light-theme', isLight);
-  activeColors = isLight ? LIGHT_COLORS : COLORS;
   gridColor = isLight ? GRID_COLOR.light : GRID_COLOR.dark;
+  draw();
+  drawNext();
+}
+
+function applySkin(skin) {
+  if (!(skin in SKINS)) return;
+  currentSkin = skin;
+  localStorage.setItem(SKIN_STORAGE_KEY, currentSkin);
   draw();
   drawNext();
 }
@@ -438,5 +539,7 @@ document.addEventListener('keydown', e => {
 
 restartBtn.addEventListener('click', init);
 themeToggle.addEventListener('change', () => applyTheme(themeToggle.checked));
+skinSelect.value = currentSkin;
+skinSelect.addEventListener('change', () => applySkin(skinSelect.value));
 
 init();
