@@ -289,6 +289,23 @@ body {
   outline-offset: 2px;
 }
 
+/* ---- Selector de skin ---- */
+#skin-select {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+#skin-select:focus-visible {
+  outline: 2px solid var(--value-color);
+  outline-offset: 2px;
+}
+
 /* ---- Controles ---- */
 .controls ul {
   list-style: none;
