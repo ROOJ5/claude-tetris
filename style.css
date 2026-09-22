@@ -128,6 +128,114 @@ body {
   border-radius: 4px;
 }
 
+/* ---- Records / tabla de puntuaciones ---- */
+.high-scores-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+}
+
+.high-scores-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--controls-text);
+}
+
+.high-scores-list li .hs-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.high-scores-list li.empty {
+  color: var(--label-color);
+  font-style: italic;
+}
+
+.high-scores-list li.highlight {
+  color: var(--value-color);
+  font-weight: 700;
+}
+
+.records-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--controls-text);
+}
+
+.reset-scores-btn {
+  align-self: flex-start;
+  background: none;
+  border: 1px solid var(--kbd-border);
+  color: var(--controls-text);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.reset-scores-btn:hover {
+  background: var(--kbd-bg);
+  color: var(--text);
+}
+
+/* ---- Formulario de nuevo récord (overlay) ---- */
+.overlay-newscore-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.overlay-newscore-form.hidden {
+  display: none;
+}
+
+.new-record-msg {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--overlay-title-color);
+}
+
+#player-name-input {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 13px;
+  text-align: center;
+  width: 140px;
+}
+
+#save-score-btn {
+  background: var(--restart-bg);
+  color: var(--restart-color);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s;
+}
+
+#save-score-btn:hover {
+  background: var(--restart-hover-bg);
+}
+
+#overlay-scores-list {
+  min-width: 180px;
+}
+
 /* ---- Toggle de tema ---- */
 .theme-toggle-section {
   flex-direction: row;
